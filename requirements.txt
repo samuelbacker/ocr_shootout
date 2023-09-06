@@ -4,6 +4,6 @@ pytesseract
 PyPDF2
 pymupdf
 opencv-python
-tensor_flow
+tensorflow
 #--upgrade tensorrt
 #kraken

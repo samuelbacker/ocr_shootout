@@ -1,0 +1,9 @@
+steamroller
+pillow
+pytesseract
+PyPDF2
+pymupdf
+opencv-python
+tensor_flow
+--upgrade tensorrt
+kraken

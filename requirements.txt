@@ -5,5 +5,5 @@ PyPDF2
 pymupdf
 opencv-python
 tensor_flow
---upgrade tensorrt
-kraken
+#--upgrade tensorrt
+#kraken

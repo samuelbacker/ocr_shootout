@@ -1,6 +1,11 @@
 import json
 import glob
 import argparse
+import nltk
+
+nltk.download('words')
+from nltk.corpus import words
+all_the_words_list = words.words()
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--input_file", dest='input_file', help="input_file_folder", nargs = "+")
@@ -21,15 +26,39 @@ for path in pathway:
         print(path)
         thing = zip_file.read()
         dictionary = json.loads(thing)
-        keys = dictionary.keys()
-        for key in keys:
+        for key, item in dictionary.items():
+            #print(key)
+            #print(item)
             if out_dict.get(key):
+                counter = 0
+                word_len = 0
                 temp_list = out_dict[key]
-                temp_list.append([path, dictionary[key]])
+             #   for page in item: 
+              #      page  = page.split()
+               #     word_len = word_len + len(page)
+                #    for word in page:
+                 #       if word in all_the_words_list:
+                  #          counter = counter + 1
+                #percentage = counter / len(word_len)
+                temp_list.append([path,item])
                 out_dict[key] = temp_list
             else:
                 temp_list = []
-                temp_list.append([path,dictionary[key]])
+                counter = 0
+                word_len = 0 
+                #for page in item:
+                    #print(item)
+                    #print(page)
+                    #print("post-page")
+                    #page  = page.split()
+                    #print(page)
+                    #print(len(page))
+                    #word_len = word_len + len(page)
+                    #for word in page:
+                     #   if word in all_the_words_list:
+                      #      counter = counter + 1
+                #percentage = counter / len(word_len)
+                temp_list.append([path, item])
                 out_dict[key] = temp_list
 with open(args.output_file, "w") as out_file:
     out_file.write(json.dumps(out_dict, indent = 4))

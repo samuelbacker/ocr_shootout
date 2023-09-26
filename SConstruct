@@ -25,7 +25,7 @@ import pickle
 # example, changing the number of folds).
 vars = Variables("custom.py")
 vars.AddVariables(
-    ("DATASETS", "", ["data/afl_records/", "data/hollywood_memo/", "data/sheet_music/"]),
+    ("DATASETS", "", ["/home/sbacker2/ocr_shootout/ocr_comparison/data/afl_records/", "/home/sbacker2/ocr_shootout/ocr_comparison/data/hollywood_memo/", "/home/sbacker2/ocr_shootout/ocr_comparison/data/sheet_music/", "/home/sbacker2/ocr_shootout/ocr_comparison/data/business_directories/"]),
     
 )
 
@@ -44,17 +44,20 @@ env = Environment(
     # automatically populate MODEL_TYPE, we'll do this with for-loops).
     BUILDERS={
         "PerformOcrPytesseract" : Builder(
-            action="python  scripts/perform_ocry_pytesseract.py --output_file ${TARGETS} --input_file ${SOURCES}"
+            action="python  scripts/perform_ocry_pytesseract.py --output_file ${TARGETS} --input_file ${SOURCES} --grayscale ${GREYSCALE} --denoise ${DENOISE} --binary_threshold ${BINARY_THRESHOLD} --preprocess ${PREPROCESS} --test_segmentation ${TEST_SEGMENTATION}"
         ),
-        "PerformOcrPytesseractPreprocessed" : Builder(
-            action="python scripts/perform_ocr_pytesseract_preprocessed.py --input_file ${SOURCES} --output_file ${TARGETS}"
-        ),
+       # "PerformOcrPytesseractPreprocessed" : Builder(
+        #    action="python scripts/perform_ocr_pytesseract_preprocessed.py --input_file ${SOURCES} --output_file ${TARGETS} --grayscale ${GREYSCALE} -#-denoise ${DENOISE} --binary_threshold ${BINARY_THRESHOLD}"
+ #       ),
         "PerformOcrKeras" : Builder(
             action="python scripts/perform_ocr_keras.py --input_file ${SOURCES} --output_file ${TARGETS}"            
         ),
         "CombineJson" : Builder(
             action="python scripts/combine_json.py --input_file ${SOURCES} --output_file ${TARGETS}"
      )
+    # ,
+#	"PerformOcr_Segmentation" : Builder(
+ #           action="python  scripts/perform_ocry_segmentation.py --output_file ${TARGETS} --input_file ${SOURCES}")
     }
 )
 
@@ -80,7 +83,12 @@ for dataset_name in env["DATASETS"]:
    files = []
    for x in glob.glob("{}*".format(dataset_name)):
        name = os.path.basename(x)
-       results.append(env.PerformOcrPytesseract("work/{}from{}.json".format(name,"Pytesseract"), x))
-       results.append(env.PerformOcrPytesseractPreprocessed("work/{}from{}.json".format(name,"PytesseractPreprocessed"), x))
+       results.append(env.PerformOcrPytesseract("work/{}from{}.json".format(name,"Pytesseract"), x, GREYSCALE = False, DENOISE  = False, BINARY_THRESHOLD = False, PREPROCESS = False,TEST_SEGMENTATION = False))
+       results.append(env.PerformOcrPytesseract("work/{}from{}.json".format(name,"PytesseractSegmentation"), x,GREYSCALE = False, DENOISE  = False, BINARY_THRESHOLD = False, PREPROCESS = False,TEST_SEGMENTATION = True ))
+       results.append(env.PerformOcrPytesseract("work/{}from{}.json".format(name,"PytesseractPreprocessedAllOptions"),x, GREYSCALE = True, DENOISE = True, BINARY_THRESHOLD = True,PREPROCESS = True,TEST_SEGMENTATION = False  ))
+       results.append(env.PerformOcrPytesseract("work/{}from{}.json".format(name,"PytesseractPreprocessedGreyscale"), x, GREYSCALE = True, DENOISE  = False, BINARY_THRESHOLD = False,PREPROCESS = True,TEST_SEGMENTATION = False ))
+       results.append(env.PerformOcrPytesseract("work/{}from{}.json".format(name,"PytesseractPreprocessedDenoise"), x, GREYSCALE = False, DENOISE  = True, BINARY_THRESHOLD = False,PREPROCESS = True,TEST_SEGMENTATION = False   ))
+       results.append(env.PerformOcrPytesseract("work/{}from{}.json".format(name,"PytesseractPreprocessedBinaryThreshold"), x,GREYSCALE = False, DENOISE  = False, BINARY_THRESHOLD = True,PREPROCESS = True,TEST_SEGMENTATION = False ))
+       results.append(env.PerformOcrPytesseract("work/{}from{}.json".format(name,"PytesseractPreprocessedGreyscaleDenoise"), x, GREYSCALE = True, DENOISE  = True, BINARY_THRESHOLD = False,PREPROCESS = True,TEST_SEGMENTATION = False ))
        results.append(env.PerformOcrKeras("work/{}from{}.json".format(name,"Keras"), x))												
-output = env.CombineJson("work/combined_json_output.json", results)			
+output = env.CombineJson("work/combined_json_output_no_matrix_test.json", results)			

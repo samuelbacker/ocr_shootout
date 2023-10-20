@@ -27,6 +27,7 @@ parser.add_argument("--denoise", dest = "denoise", type = str2bool,help="Remove 
 parser.add_argument("--binary_threshold", dest = "binary_threshold", type = str2bool, help="Apply binary thresholding")
 parser.add_argument("--preprocess", dest = "pre_process", type = str2bool, help = "is preprocess on?") 
 parser.add_argument("--test_segmentation", dest = "seg_test", type = str2bool, help = "test segmentation methods?") 
+parser.add_argument("--prompt", dest = prompt, type = string, help = "what you want the prompt to be")
 args = parser.parse_args()
 settings = {
         "grayscale": args.grayscale,
@@ -110,6 +111,9 @@ with open (pathway, 'r') as zip_file:
         text_list[pathway] = out_text
         #print(out_text)
 
+text_list = text_list.join()
+text_list = args.prompt + ":" + text_list 
+        
 with open (args.output_file, "w") as out_file:
-    out_file.write(json.dumps(text_list, indent = 4))
+    out_file.write(text_list)
  

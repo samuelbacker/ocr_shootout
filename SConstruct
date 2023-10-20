@@ -43,7 +43,7 @@ env = Environment(
     # automatically populate MODEL_TYPE, we'll do this with for-loops).
     BUILDERS={
         "PerformOcrPytesseract" : Builder(
-            action="python  scripts/perform_ocry_pytesseract.py --output_file ${TARGETS} --input_file ${SOURCES} --grayscale ${GREYSCALE} --denoise ${DENOISE} --binary_threshold ${BINARY_THRESHOLD} --preprocess ${PREPROCESS} --test_segmentation ${TEST_SEGMENTATION}"
+            action="python  scripts/perform_ocry_pytesseract.py --output_file ${TARGETS} --input_file ${SOURCES} --grayscale ${GREYSCALE} --denoise ${DENOISE} --binary_threshold ${BINARY_THRESHOLD} --preprocess ${PREPROCESS} --test_segmentation ${TEST_SEGMENTATION} --prompt ${PROMPT}"
         ),
        # "PerformOcrPytesseractPreprocessed" : Builder(
         #    action="python scripts/perform_ocr_pytesseract_preprocessed.py --input_file ${SOURCES} --output_file ${TARGETS} --grayscale ${GREYSCALE} -#-denoise ${DENOISE} --binary_threshold ${BINARY_THRESHOLD}"
@@ -54,6 +54,7 @@ env = Environment(
         "CombineJson" : Builder(
             action="python scripts/combine_json.py --input_file ${SOURCES} --output_file ${TARGETS}"
      )
+      "InvokeLlama" : Builder( action = "python/scripts/interactive.py --input_file ${SOURCES[0]} --output ${TARGETS[0]} ")
     # ,
 #	"PerformOcr_Segmentation" : Builder(
  #           action="python  scripts/perform_ocry_segmentation.py --output_file ${TARGETS} --input_file ${SOURCES}")
@@ -80,18 +81,30 @@ env = Environment(
 results = []
 for dataset_name in env["DATASETS"]:
    files = []
-   for x in glob.glob("{}*".format(dataset_name)):
-       name = os.path.basename(x)
-       results.append(env.PerformOcrPytesseract("work/{}from{}.json".format(name,"Pytesseract"), x, GREYSCALE = False, DENOISE  = False, BINARY_THRESHOLD = False, PREPROCESS = False,TEST_SEGMENTATION = False))
-       results.append(env.PerformOcrPytesseract("work/{}from{}.json".format(name,"PytesseractSegmentation"), x,GREYSCALE = False, DENOISE  = False, BINARY_THRESHOLD = False, PREPROCESS = False,TEST_SEGMENTATION = True ))
-       results.append(env.PerformOcrPytesseract("work/{}from{}.json".format(name,"PytesseractPreprocessedAllOptions"),x, GREYSCALE = True, DENOISE = True, BINARY_THRESHOLD = True,PREPROCESS = True,TEST_SEGMENTATION = False  ))
-       results.append(env.PerformOcrPytesseract("work/{}from{}.json".format(name,"PytesseractPreprocessedGreyscale"), x, GREYSCALE = True, DENOISE  = False, BINARY_THRESHOLD = False,PREPROCESS = True,TEST_SEGMENTATION = False ))
-       results.append(env.PerformOcrPytesseract("work/{}from{}.json".format(name,"PytesseractPreprocessedDenoise"), x, GREYSCALE = False, DENOISE  = True, BINARY_THRESHOLD = False,PREPROCESS = True,TEST_SEGMENTATION = False   ))
-       results.append(env.PerformOcrPytesseract("work/{}from{}.json".format(name,"PytesseractPreprocessedBinaryThreshold"), x,GREYSCALE = False, DENOISE  = False, BINARY_THRESHOLD = True,PREPROCESS = True,TEST_SEGMENTATION = False ))
-       results.append(env.PerformOcrPytesseract("work/{}from{}.json".format(name,"PytesseractPreprocessedGreyscaleDenoise"), x, GREYSCALE = True, DENOISE  = True, BINARY_THRESHOLD = False,PREPROCESS = True,TEST_SEGMENTATION = False ))
+   for prompt in env["PROMPTS"]
+       for x in glob.glob("{}*".format(dataset_name)):
+       	   name = os.path.basename(x)
+       	   results.append([(env.PerformOcrPytesseract("work/{}from{}.json".format(name,"Pytesseract"), x, GREYSCALE = False, DENOISE  = False, BINARY_THRESHOLD = False, PREPROCESS = False,TEST_SEGMENTATION = False, PROMPT = prompt)), name])
+	  
+#       results.append(env.PerformOcrPytesseract("work/{}from{}.json".format(name,"PytesseractSegmentation"), x,GREYSCALE = False, DENOISE  = False, BINARY_THRESHOLD = False, PREPROCESS = False,TEST_SEGMENTATION = True ))
+ #     results.append(env.PerformOcrPytesseract("work/{}from{}.json".format(name,"PytesseractPreprocessedAllOptions"),x, GREYSCALE = True, DENOISE = True, BINARY_THRESHOLD = True,PREPROCESS = True,TEST_SEGMENTATION = False  ))
+  #     results.append(env.PerformOcrPytesseract("work/{}from{}.json".format(name,"PytesseractPreprocessedGreyscale"), x, GREYSCALE = True, DENOISE  = False, BINARY_THRESHOLD = False,PREPROCESS = True,TEST_SEGMENTATION = False ))
+   #    results.append(env.PerformOcrPytesseract("work/{}from{}.json".format(name,"PytesseractPreprocessedDenoise"), x, GREYSCALE = False, DENOISE  = True, BINARY_THRESHOLD = False,PREPROCESS = True,TEST_SEGMENTATION = False   ))
+    #   results.append(env.PerformOcrPytesseract("work/{}from{}.json".format(name,"PytesseractPreprocessedBinaryThreshold"), x,GREYSCALE = False, DENOISE  = False, BINARY_THRESHOLD = True,PREPROCESS = True,TEST_SEGMENTATION = False ))
+     #  results.append(env.PerformOcrPytesseract("work/{}from{}.json".format(name,"PytesseractPreprocessedGreyscaleDenoise"), x, GREYSCALE = True, DENOISE  = True, BINARY_THRESHOLD = False,PREPROCESS = True,TEST_SEGMENTATION = False ))
    #    results.append(env.PerformOcrKeras("work/{}from{}.json".format(name,"Keras"), x))
-output = []   
-output.append(env.CombineJson("work/combined_json_output_no_matrix_test.json", results))			
+
+llm_ocr = []
+
+for result in results:
+    llm_ocr.append(env.InvokeLlama("work/{}fromllama.json".format(result[1]), result[0])
+    llm_ocr.append(result[0])
+
+
+
+
+#output = []   
+output.append(env.CombineJson("work/combined_corrected_output.json", llm_ocr))			
 
 
 

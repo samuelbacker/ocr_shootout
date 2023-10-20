@@ -21,11 +21,6 @@ for path in pathway:
     with open(path, 'r') as zip_file:
         path = path.split("from")
         path = path[1]
-        #print(path)
-        #path = path.split(".")
-        #path = path[0]
-        #path.strip("work/")
-        #print("this is the path")
         print(path)
         dictionary = json.load(zip_file)
         for key, item in dictionary.items():

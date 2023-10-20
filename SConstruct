@@ -11,7 +11,7 @@ import time
 import imp
 import sys
 import json
-import steamroller
+from steamroller import Environment
 import glob
 
 # workaround needed to fix bug with SCons and the pickle module
@@ -25,16 +25,15 @@ import pickle
 # example, changing the number of folds).
 vars = Variables("custom.py")
 vars.AddVariables(
-    ("DATASETS", "", ["/home/sbacker2/ocr_shootout/ocr_comparison/data/afl_records/", "/home/sbacker2/ocr_shootout/ocr_comparison/data/hollywood_memo/", "/home/sbacker2/ocr_shootout/ocr_comparison/data/sheet_music/", "/home/sbacker2/ocr_shootout/ocr_comparison/data/business_directories/"]),
-    
-)
+    ("DATASETS", "", ["/home/sbacker2/projects/ocr_shootout_clean_install/ocr_shootout/data/afl_records/", "/home/sbacker2/projects/ocr_shootout_clean_install/ocr_shootout/data/hollywood_memo/", "/home/sbacker2/projects/ocr_shootout_clean_install/ocr_shootout/data/sheet_music/", "/home/sbacker2/projects/ocr_shootout_clean_install/ocr_shootout/data/business_directories/"]),
+("PROMPT", "", "this is text produced by OCR, creating numerous mistakes. please produce a cleaned version of this text, making any changes that you believe you have a 90% or above certainty about."))
 
 # Methods on the environment object are used all over the place, but it mostly serves to
 # manage the variables (see above) and builders (see below).
 env = Environment(
     variables=vars,
     ENV=os.environ,
-    tools=[steamroller.generate],
+    tools=[],
     
     # Defining a bunch of builders (none of these do anything except "touch" their targets,
     # as you can see in the dummy.py script).  Consider in particular the "TrainModel" builder,
@@ -49,9 +48,9 @@ env = Environment(
        # "PerformOcrPytesseractPreprocessed" : Builder(
         #    action="python scripts/perform_ocr_pytesseract_preprocessed.py --input_file ${SOURCES} --output_file ${TARGETS} --grayscale ${GREYSCALE} -#-denoise ${DENOISE} --binary_threshold ${BINARY_THRESHOLD}"
  #       ),
-        "PerformOcrKeras" : Builder(
-            action="python scripts/perform_ocr_keras.py --input_file ${SOURCES} --output_file ${TARGETS}"            
-        ),
+#        "PerformOcrKeras" : Builder(
+ #           action="python scripts/perform_ocr_keras.py --input_file ${SOURCES} --output_file ${TARGETS}"            
+  #      ),
         "CombineJson" : Builder(
             action="python scripts/combine_json.py --input_file ${SOURCES} --output_file ${TARGETS}"
      )
@@ -90,5 +89,9 @@ for dataset_name in env["DATASETS"]:
        results.append(env.PerformOcrPytesseract("work/{}from{}.json".format(name,"PytesseractPreprocessedDenoise"), x, GREYSCALE = False, DENOISE  = True, BINARY_THRESHOLD = False,PREPROCESS = True,TEST_SEGMENTATION = False   ))
        results.append(env.PerformOcrPytesseract("work/{}from{}.json".format(name,"PytesseractPreprocessedBinaryThreshold"), x,GREYSCALE = False, DENOISE  = False, BINARY_THRESHOLD = True,PREPROCESS = True,TEST_SEGMENTATION = False ))
        results.append(env.PerformOcrPytesseract("work/{}from{}.json".format(name,"PytesseractPreprocessedGreyscaleDenoise"), x, GREYSCALE = True, DENOISE  = True, BINARY_THRESHOLD = False,PREPROCESS = True,TEST_SEGMENTATION = False ))
-       results.append(env.PerformOcrKeras("work/{}from{}.json".format(name,"Keras"), x))												
-output = env.CombineJson("work/combined_json_output_no_matrix_test.json", results)			
+   #    results.append(env.PerformOcrKeras("work/{}from{}.json".format(name,"Keras"), x))
+output = []   
+output.append(env.CombineJson("work/combined_json_output_no_matrix_test.json", results))			
+
+
+
